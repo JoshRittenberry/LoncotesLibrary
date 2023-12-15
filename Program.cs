@@ -28,5 +28,29 @@ app.UseHttpsRedirection();
 
 // The librarians would like to see a list of all the circulating materials. 
 // Include the Genre and MaterialType. Exclude materials that have a OutOfCirculationSince value.
+app.MapGet("/api/materials", (LoncotesLibraryDbContext db) =>
+{
+    return db.Materials
+    .Where(m => m.OutOfCirculationSince != null)
+    .Select(m => new MaterialDTO
+    {
+        Id = m.Id,
+        MaterialName = m.MaterialName,
+        MaterialTypeId = m.MaterialTypeId,
+        MaterialType = new MaterialTypeDTO
+        {
+            Id = m.MaterialType.Id,
+            Name = m.MaterialType.Name,
+            CheckoutDays = m.MaterialType.CheckoutDays
+        },
+        GenreId = m.GenreId,
+        Genre = new GenreDTO
+        {
+            Id = m.Genre.Id,
+            Name = m.Genre.Name
+        },
+        OutOfCirculationSince = m.OutOfCirculationSince
+    }).ToList();
+});
 
 app.Run();
