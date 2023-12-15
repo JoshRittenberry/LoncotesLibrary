@@ -24,4 +24,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Get Endpoints
+
+// The librarians would like to see a list of all the circulating materials. 
+// Include the Genre and MaterialType. Exclude materials that have a OutOfCirculationSince value.
+
 app.Run();

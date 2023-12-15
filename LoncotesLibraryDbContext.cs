@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using LoncotesLibrary.Models;
-
 public class LoncotesLibraryDbContext : DbContext
 {
 
-    public DbSet<Checkout> Checkout { get; set; }
-    public DbSet<Genre> Genre { get; set; }
-    public DbSet<Material> Material { get; set; }
-    public DbSet<MaterialType> MaterialType { get; set; }
-    public DbSet<Patron> Patron { get; set; }
+    public DbSet<Checkout> Checkouts { get; set; }
+    public DbSet<Genre> Genres { get; set; }
+    public DbSet<Material> Materials { get; set; }
+    public DbSet<MaterialType> MaterialTypes { get; set; }
+    public DbSet<Patron> Patrons { get; set; }
 
     public LoncotesLibraryDbContext(DbContextOptions<LoncotesLibraryDbContext> context) : base(context)
     {
