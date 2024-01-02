@@ -219,6 +219,23 @@ app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
         }).ToList();
 });
 
+app.MapGet("/api/materials/available", (LoncotesLibraryDbContext db) =>
+{
+    // https://localhost:7193/api/materials/available
+    
+    return db.Materials
+        .Where(m => m.OutOfCirculationSince == null)
+        .Where(m => m.Checkouts.All(co => co.ReturnDate != null))
+        .Select(material => new MaterialDTO
+        {
+            Id = material.Id,
+            MaterialName = material.MaterialName,
+            MaterialTypeId = material.MaterialTypeId,
+            GenreId = material.GenreId,
+            OutOfCirculationSince = material.OutOfCirculationSince
+        }).ToList();
+});
+
 // Post Endpoints
 app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =>
 {
