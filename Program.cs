@@ -1,9 +1,5 @@
 using LoncotesLibrary.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http.Json;
-using System.Net.Security;
-using System.Reflection.Metadata.Ecma335;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -234,12 +230,12 @@ app.MapPut("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
     return Results.NoContent();
 });
 
-app.MapPost("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron patron) =>
+app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron patron) =>
 {
     // https://localhost:7193/api/patrons/1
     // {
     //      "address": "456 Library St, Booktown, USA 12345",
-    //      "email": "alice.smith@email.com"
+    //      "email": "alice.smith@email.com",
     //      "isActive": true
     // }
 
