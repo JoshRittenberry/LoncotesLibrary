@@ -182,6 +182,8 @@ app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
 
 app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
 {
+    // https://localhost:7193/api/checkouts/
+
     return db.Checkouts
         .Include(co => co.Material)
             .ThenInclude(m => m.MaterialType)
@@ -252,13 +254,19 @@ app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =
 
 app.MapPost("/api/checkouts", (LoncotesLibraryDbContext db, Checkout checkout) =>
 {
+    // https://localhost:7193/api/checkouts
+    // {
+    //     "materialId": 20,
+    //     "patronId": 4
+    // }
+
     try
     {
         var material = db.Materials
             .Include(m => m.MaterialType)
             .FirstOrDefault(m => m.Id == checkout.MaterialId);
 
-        checkout.CheckoutDate = DateTime.Now;
+        checkout.CheckoutDate = DateTime.Today;
 
         db.Checkouts.Add(checkout);
         db.SaveChanges();
@@ -281,7 +289,7 @@ app.MapPut("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
     {
         return Results.NotFound();
     }
-    materialToSoftDelete.OutOfCirculationSince = DateTime.Now;
+    materialToSoftDelete.OutOfCirculationSince = DateTime.Today;
 
     db.SaveChanges();
     return Results.NoContent();
@@ -333,6 +341,20 @@ app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron pat
     {
         return Results.NoContent();
     }
+});
+
+app.MapPut("/api/checkouts/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    // https://localhost:7193/api/checkouts/55
+
+    var checkoutToUpdate = db.Checkouts
+        .FirstOrDefault(co => co.Id == id);
+    
+    checkoutToUpdate.ReturnDate = DateTime.Today;
+
+    db.SaveChanges();
+
+    return Results.Ok();
 });
 
 app.Run();
