@@ -133,6 +133,8 @@ app.MapGet("/api/genres", (LoncotesLibraryDbContext db) =>
 
 app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
 {
+    // https://localhost:7193/api/patrons/
+
     var patrons = db.Patrons
         .Include(p => p.Checkouts)
             .ThenInclude(c => c.Material)
@@ -230,6 +232,54 @@ app.MapPut("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
 
     db.SaveChanges();
     return Results.NoContent();
+});
+
+app.MapPost("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron patron) =>
+{
+    // https://localhost:7193/api/patrons/1
+    // {
+    //      "address": "456 Library St, Booktown, USA 12345",
+    //      "email": "alice.smith@email.com"
+    //      "isActive": true
+    // }
+
+    var patronToUpdate = db.Patrons
+        .SingleOrDefault(p => p.Id == id);
+
+    if (patronToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+
+    bool isUpdated = false;
+
+    if (!string.IsNullOrWhiteSpace(patron.Address) && patron.Address != patronToUpdate.Address)
+    {
+        patronToUpdate.Address = patron.Address.Trim();
+        isUpdated = true;
+    }
+
+    if (!string.IsNullOrWhiteSpace(patron.Email) && patron.Email != patronToUpdate.Email)
+    {
+        patronToUpdate.Email = patron.Email.Trim();
+        isUpdated = true;
+    }
+
+    if (patron.IsActive != null)
+    {
+        patronToUpdate.IsActive = patron.IsActive;
+        isUpdated = true;
+    }
+
+    if (isUpdated)
+    {
+        db.SaveChanges();
+        return Results.Ok(patronToUpdate);
+    }
+    else
+    {
+        return Results.NoContent();
+    }
 });
 
 app.Run();
