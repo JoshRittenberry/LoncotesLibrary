@@ -180,6 +180,43 @@ app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
     return patrons;
 });
 
+app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
+{
+    return db.Checkouts
+        .Include(co => co.Material)
+            .ThenInclude(m => m.MaterialType)
+            .Include(co => co.Material)
+                .ThenInclude(m => m.Genre)
+        .Select(co => new CheckoutDTO
+        {
+            Id = co.Id,
+            MaterialId = co.MaterialId,
+            Material = new MaterialDTO
+            {
+                Id = co.Material.Id,
+                MaterialName = co.Material.MaterialName,
+                MaterialTypeId = co.Material.MaterialTypeId,
+                MaterialType = new MaterialTypeDTO
+                {
+                    Id = co.Material.MaterialType.Id,
+                    Name = co.Material.MaterialType.Name,
+                    CheckoutDays = co.Material.MaterialType.CheckoutDays
+                },
+                GenreId = co.Material.MaterialTypeId,
+                Genre = new GenreDTO
+                {
+                    Id = co.Material.Genre.Id,
+                    Name = co.Material.Genre.Name
+                },
+                OutOfCirculationSince = co.Material.OutOfCirculationSince,
+                Checkouts = null
+            },
+            PatronId = co.PatronId,
+            CheckoutDate = co.CheckoutDate,
+            ReturnDate = co.ReturnDate
+        }).ToList();
+});
+
 // Post Endpoints
 app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =>
 {
@@ -195,7 +232,6 @@ app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =
         db.Materials.Add(material);
         db.SaveChanges();
 
-        // Load the related entities
         var materialWithDetails = db.Materials
             .Include(m => m.MaterialType)
             .Include(m => m.Genre)
@@ -207,6 +243,27 @@ app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =
         }
 
         return Results.Created($"/api/materials/{material.Id}", materialWithDetails);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.BadRequest("Invalid data submitted");
+    }
+});
+
+app.MapPost("/api/checkouts", (LoncotesLibraryDbContext db, Checkout checkout) =>
+{
+    try
+    {
+        var material = db.Materials
+            .Include(m => m.MaterialType)
+            .FirstOrDefault(m => m.Id == checkout.MaterialId);
+
+        checkout.CheckoutDate = DateTime.Now;
+
+        db.Checkouts.Add(checkout);
+        db.SaveChanges();
+
+        return Results.NoContent();
     }
     catch (DbUpdateException)
     {
