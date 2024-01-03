@@ -16,7 +16,7 @@ public class CheckoutWithLateFeeDTO
     public DateTime CheckoutDate { get; set; }
     public DateTime? ReturnDate { get; set; }
     private static decimal _LateFeePerDay = 0.50M;
-    public decimal? LateFee 
+    public decimal? LateFee
     {
         get
         {
@@ -27,4 +27,5 @@ public class CheckoutWithLateFeeDTO
             return daysLate > 0 ? fee : null;
         }
     }
+    public bool Paid { get; set; }
 }

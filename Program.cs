@@ -190,6 +190,34 @@ app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
                 CheckoutDate = co.CheckoutDate,
                 ReturnDate = co.ReturnDate
             })
+            .ToList(),
+            CheckoutsWithLateFees = p.Checkouts.Select(co => new CheckoutWithLateFeeDTO
+            {
+                Id = co.Id,
+                MaterialId = co.MaterialId,
+                Material = new MaterialDTO
+                {
+                    Id = co.Material.Id,
+                    MaterialName = co.Material.MaterialName,
+                    MaterialTypeId = co.Material.MaterialTypeId,
+                    MaterialType = new MaterialTypeDTO
+                    {
+                        Id = co.Material.MaterialType.Id,
+                        Name = co.Material.MaterialType.Name,
+                        CheckoutDays = co.Material.MaterialType.CheckoutDays
+                    },
+                    GenreId = co.Material.GenreId,
+                    Genre = new GenreDTO
+                    {
+                        Id = co.Material.Genre.Id,
+                        Name = co.Material.Genre.Name
+                    },
+                    OutOfCirculationSince = co.Material.OutOfCirculationSince,
+                },
+                PatronId = co.PatronId,
+                CheckoutDate = co.CheckoutDate,
+                ReturnDate = co.ReturnDate
+            })
             .ToList()
         })
         .ToList();
