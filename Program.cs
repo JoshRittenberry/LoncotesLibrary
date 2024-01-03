@@ -31,7 +31,7 @@ app.MapGet("/api/materials", (LoncotesLibraryDbContext db, int? materialTypeId, 
 
     return db.Materials
     .Where(m =>
-        m.OutOfCirculationSince == null &&
+        // m.OutOfCirculationSince == null &&
         (!materialTypeId.HasValue || m.MaterialTypeId == materialTypeId.Value) &&
         (!genreId.HasValue || m.GenreId == genreId.Value)
     )
@@ -121,12 +121,25 @@ app.MapGet("/api/materials/available", (LoncotesLibraryDbContext db) =>
     return db.Materials
         .Where(m => m.OutOfCirculationSince == null)
         .Where(m => m.Checkouts.All(co => co.ReturnDate != null))
+        .Include(m => m.MaterialType)
+        .Include(m => m.Genre)
         .Select(material => new MaterialDTO
         {
             Id = material.Id,
             MaterialName = material.MaterialName,
             MaterialTypeId = material.MaterialTypeId,
+            MaterialType = new MaterialTypeDTO
+            {
+                Id = material.MaterialType.Id,
+                Name = material.MaterialType.Name,
+                CheckoutDays = material.MaterialType.CheckoutDays
+            },
             GenreId = material.GenreId,
+            Genre = new GenreDTO
+            {
+                Id = material.Genre.Id,
+                Name = material.Genre.Name
+            },
             OutOfCirculationSince = material.OutOfCirculationSince
         }).ToList();
 });
