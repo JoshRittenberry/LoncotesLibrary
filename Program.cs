@@ -88,7 +88,8 @@ app.MapGet("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
                 IsActive = co.Patron.IsActive
             },
             CheckoutDate = co.CheckoutDate,
-            ReturnDate = co.ReturnDate
+            ReturnDate = co.ReturnDate,
+            Paid = co.Paid
         }).ToList();
 
     return Results.Ok(new MaterialDTO
@@ -96,7 +97,18 @@ app.MapGet("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
         Id = material.Id,
         MaterialName = material.MaterialName,
         MaterialTypeId = material.MaterialTypeId,
+        MaterialType = new MaterialTypeDTO
+        {
+            Id = material.MaterialType.Id,
+            Name = material.MaterialType.Name,
+            CheckoutDays = material.MaterialType.CheckoutDays
+        },
         GenreId = material.GenreId,
+        Genre = new GenreDTO
+        {
+            Id = material.Genre.Id,
+            Name = material.Genre.Name
+        },
         OutOfCirculationSince = material.OutOfCirculationSince,
         Checkouts = materialCheckouts
     });
@@ -188,7 +200,8 @@ app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
                 },
                 PatronId = co.PatronId,
                 CheckoutDate = co.CheckoutDate,
-                ReturnDate = co.ReturnDate
+                ReturnDate = co.ReturnDate,
+                Paid = co.Paid
             })
             .ToList(),
             CheckoutsWithLateFees = p.Checkouts.Select(co => new CheckoutWithLateFeeDTO
@@ -216,13 +229,101 @@ app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
                 },
                 PatronId = co.PatronId,
                 CheckoutDate = co.CheckoutDate,
-                ReturnDate = co.ReturnDate
+                ReturnDate = co.ReturnDate,
+                Paid = co.Paid
             })
             .ToList()
         })
         .ToList();
 
     return patrons;
+});
+
+app.MapGet("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    // https://localhost:7193/api/patrons/1
+
+    var patron = db.Patrons
+        .Include(p => p.Checkouts)
+            .ThenInclude(c => c.Material)
+                .ThenInclude(m => m.MaterialType)
+            .Include(p => p.Checkouts)
+                .ThenInclude(c => c.Material)
+                    .ThenInclude(m => m.Genre)
+        .SingleOrDefault(p => p.Id == id);
+
+    if (patron == null)
+    {
+        return Results.NotFound(); // Or handle not found scenario appropriately
+    }
+
+    return Results.Ok(new PatronDTO
+    {
+        Id = patron.Id,
+        FirstName = patron.FirstName,
+        LastName = patron.LastName,
+        Address = patron.Address,
+        Email = patron.Email,
+        IsActive = patron.IsActive,
+        Checkouts = patron.Checkouts.Select(co => new CheckoutDTO
+        {
+            Id = co.Id,
+            MaterialId = co.MaterialId,
+            Material = new MaterialDTO
+            {
+                Id = co.Material.Id,
+                MaterialName = co.Material.MaterialName,
+                MaterialTypeId = co.Material.MaterialTypeId,
+                MaterialType = new MaterialTypeDTO
+                {
+                    Id = co.Material.MaterialType.Id,
+                    Name = co.Material.MaterialType.Name,
+                    CheckoutDays = co.Material.MaterialType.CheckoutDays
+                },
+                GenreId = co.Material.GenreId,
+                Genre = new GenreDTO
+                {
+                    Id = co.Material.Genre.Id,
+                    Name = co.Material.Genre.Name
+                },
+                OutOfCirculationSince = co.Material.OutOfCirculationSince,
+            },
+            PatronId = co.PatronId,
+            CheckoutDate = co.CheckoutDate,
+            ReturnDate = co.ReturnDate,
+            Paid = co.Paid
+        })
+            .ToList(),
+        CheckoutsWithLateFees = patron.Checkouts.Select(co => new CheckoutWithLateFeeDTO
+        {
+            Id = co.Id,
+            MaterialId = co.MaterialId,
+            Material = new MaterialDTO
+            {
+                Id = co.Material.Id,
+                MaterialName = co.Material.MaterialName,
+                MaterialTypeId = co.Material.MaterialTypeId,
+                MaterialType = new MaterialTypeDTO
+                {
+                    Id = co.Material.MaterialType.Id,
+                    Name = co.Material.MaterialType.Name,
+                    CheckoutDays = co.Material.MaterialType.CheckoutDays
+                },
+                GenreId = co.Material.GenreId,
+                Genre = new GenreDTO
+                {
+                    Id = co.Material.Genre.Id,
+                    Name = co.Material.Genre.Name
+                },
+                OutOfCirculationSince = co.Material.OutOfCirculationSince,
+            },
+            PatronId = co.PatronId,
+            CheckoutDate = co.CheckoutDate,
+            ReturnDate = co.ReturnDate,
+            Paid = co.Paid
+        })
+            .ToList()
+    });
 });
 
 app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
@@ -260,12 +361,15 @@ app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
             },
             PatronId = co.PatronId,
             CheckoutDate = co.CheckoutDate,
-            ReturnDate = co.ReturnDate
+            ReturnDate = co.ReturnDate,
+            Paid = co.Paid
         }).ToList();
 });
 
 app.MapGet("/api/checkouts/overdue", (LoncotesLibraryDbContext db) =>
 {
+    // https://localhost:7193/api/checkouts/overdue
+
     return db.Checkouts
     .Include(p => p.Patron)
     .Include(co => co.Material)
@@ -303,7 +407,8 @@ app.MapGet("/api/checkouts/overdue", (LoncotesLibraryDbContext db) =>
                 IsActive = co.Patron.IsActive
             },
             CheckoutDate = co.CheckoutDate,
-            ReturnDate = co.ReturnDate
+            ReturnDate = co.ReturnDate,
+            Paid = co.Paid
         })
     .ToList();
 });
